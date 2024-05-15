@@ -1,38 +1,33 @@
-# Ask for user input
-$projectName = Read-Host "Enter the project name"
-$repoVisibility = Read-Host "Private or Public repo? [private/public]"
+$projectName = Read-Host "Project Name: "
 $templateType = Read-Host "Template type (bootstrap, tailwind)"
+$projectType = Read-Host "Send to GitHub? [Yes/No]"
+if ($projectType -eq "Yes") {
+    $repoVisibility = Read-Host "Private or Public repo? [private/public]"
+    gh repo create $projectName --visibility $repoVisibility --confirm
+    git clone https://github.com/Blake14/$projectName
+}
 
-
-# Create GitHub repository
-gh repo create $projectName --$repoVisibility --confirm
-# Clone the repo locally
-git clone https://github.com/Blake14/$projectName
-New-Item -Path ./$projectName -type Directory
+New-Item -Path ./$projectName -Type Directory
 Set-Location $projectName
 
 npx create-react-app client
 Set-Location client
+Remove-Item src/logo.svg, src/App.test.js, src/reportWebVitals.js, src/setupTests.js, src/app.css, src/index.css
 
-# Remove unwanted files
-Remove-Item src/logo.svg, src/App.test.js, src/reportWebVitals.js, src/setupTests.js
+Copy-Item "../../templates/reactjs/App.js" -Destination "src/App.js" -Force
+Copy-Item "../../templates/reactjs/Index.js" -Destination "src/index.js" -Force 
+Copy-Item "../../templates/reactjs/tailwind.css" -Destination "src/styles/tailwind.css" -Force 
 
-# Replace App.js with a template file based on selected template
-if ($templateType -eq "bootstrap") {
-    Copy-Item "../../templates/reactjs/App.js" -Destination "src/App.js" -Force
-}
-
-# Add necessary dependencies
 switch ($templateType) {
     "tailwind" {
-        yarn add react, react-bootstrap, react-bootstrap, react-icons, tailwindcss@npm:@tailwindcss/postcss7-compat @tailwindcss/postcss7-compat postcss@^7 autoprefixer@^9
+        yarn add tailwindcss@npm:@tailwindcss/postcss7-compat @tailwindcss/postcss7-compat postcss@^7 autoprefixer@^9 react-bootstrap bootstrap react-icons react-bootstrap-icons react-router-dom
     }
     "bootstrap" {
-        yarn add react, react-bootstrap, react-bootstrap, react-icons
+        yarn add react-bootstrap bootstrap react-icons react-bootstrap-icons react-router-dom
     }
 }
-
-# Initialize git and first commit
-git add .
-git commit -m "Initial commit with template setup"
-git push origin main
+if ($projectType -eq "Yes") {
+    git add .
+    git commit -m "Initial commit with template setup"
+    git push origin main
+}
